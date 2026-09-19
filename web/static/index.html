@@ -1,0 +1,1183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SDOC verification desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#EDF0F4; --surface:#FFFFFF; --surface-2:#F7F8FA;
+  --line:#E0E4EA; --line-strong:#C9D0DA;
+  --ink:#121C2B; --ink-2:#4B586B; --ink-3:#77849A;
+  --rail:#0C1B2E; --rail-2:#15273F; --rail-ink:#C7D2E1; --rail-ink-2:#8093AD;
+  --flag-yellow:#F5B800;
+  --accent:#1747C9; --accent-ink:#FFFFFF; --accent-soft:#E4ECFD;
+  --ok:#0E7A49; --ok-bg:#E1F3E9; --ok-line:#B4DEC6;
+  --bad:#B42318; --bad-bg:#FCE9E6; --bad-line:#F0BDB6;
+  --warn:#8A5600; --warn-bg:#FFF2CC; --warn-line:#EBCF83; --warn-flag:#E9A800;
+  --neutral-bg:#E9ECF1;
+  --sans:'Schibsted Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'Spline Sans Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --canvas:#0A121D; --surface:#101B2B; --surface-2:#0D1725;
+    --line:#22334C; --line-strong:#33476A;
+    --ink:#E7ECF4; --ink-2:#A8B4C6; --ink-3:#74839B;
+    --rail:#060D18; --rail-2:#111F33;
+    --accent:#7BA3FF; --accent-ink:#071634; --accent-soft:#152848;
+    --ok:#56CB93; --ok-bg:#0F2B1F; --ok-line:#1C5238;
+    --bad:#FF8E84; --bad-bg:#37171A; --bad-line:#6B2A2C;
+    --warn:#F2BF5E; --warn-bg:#342809; --warn-line:#6E5313; --warn-flag:#F0B429;
+    --neutral-bg:#1A2A40;
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:14px/1.5 var(--sans);color:var(--ink);background:var(--canvas);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.i{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* Shell */
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);grid-template-rows:56px minmax(0,1fr);height:100vh}
+.rail{grid-row:1/3;background:var(--rail);color:var(--rail-ink);display:flex;flex-direction:column;padding:16px 12px;gap:2px;overflow-y:auto}
+.brand{display:flex;gap:10px;align-items:center;padding:2px 8px 18px}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--flag-yellow);color:#1b1500;display:grid;place-items:center}
+.brand b{display:block;color:#fff;font-size:15px;line-height:1.2}
+.brand small{color:var(--rail-ink-2);font-size:12px}
+.newbtn{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 4px 14px;padding:10px;border:0;border-radius:9px;background:var(--flag-yellow);color:#1b1500;font-weight:600}
+.newbtn:hover{filter:brightness(1.06)}
+.nav-label{margin:16px 10px 6px;color:var(--rail-ink-2);font-size:12px;font-weight:600}
+.nav{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;background:none;color:var(--rail-ink);border-radius:8px;text-align:left}
+.nav:hover{background:var(--rail-2)}
+.nav[aria-current=page]{background:var(--rail-2);color:#fff;box-shadow:inset 3px 0 0 var(--flag-yellow)}
+.count{margin-left:auto;font-size:12px;font-weight:600;padding:0 8px;border-radius:99px;background:rgba(255,255,255,.12);color:#fff;font-variant-numeric:tabular-nums}
+.count.warn{background:var(--flag-yellow);color:#1b1500}
+.count.bad{background:#E5484D}
+.rail-foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 8px 0;border-top:1px solid var(--rail-2);color:var(--rail-ink-2);font-size:13px}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--rail-2);display:grid;place-items:center;color:#fff;font-weight:600;font-size:12px}
+
+.top{display:flex;align-items:center;gap:12px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line)}
+.top h1{margin:0;font-size:16px;font-weight:600}
+.top .sp{flex:1}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:99px;font-size:13px;background:var(--neutral-bg);color:var(--ink-2)}
+.pill::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ink-3)}
+.pill.live{background:var(--ok-bg);color:var(--ok)} .pill.live::before{background:var(--ok)}
+.pill.demo{background:var(--warn-bg);color:var(--warn)} .pill.demo::before{background:var(--warn-flag)}
+.main{min-height:0;overflow:hidden}
+.view{height:100%;overflow:auto}
+
+/* Controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 14px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);font-weight:500;line-height:1.3}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.1)}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.btn .spin{animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.input,.select{width:100%;padding:8px 11px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface)}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:500;background:var(--neutral-bg);color:var(--ink-2);white-space:nowrap}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.chip.bad{background:var(--bad-bg);color:var(--bad)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.info{background:var(--accent-soft);color:var(--accent)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{padding:4px 11px;border-radius:99px;border:1px solid var(--line-strong);background:var(--surface);font-size:13px}
+.seg button[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.card-h{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);font-weight:600}
+.card-b{padding:14px 16px}
+
+/* Field meter: one segment per compared field */
+.meter{display:inline-flex;gap:2px;flex:none}
+.meter i{width:9px;height:9px;border-radius:2px;background:var(--line-strong)}
+.meter i.match{background:var(--ok)}
+.meter i.mismatch{background:var(--bad)}
+.meter i.missing{background:var(--warn-flag)}
+.meter.lg{gap:3px}
+.meter.lg i{width:26px;height:10px;border-radius:3px}
+
+/* List and detail */
+.md{display:grid;grid-template-columns:minmax(300px,390px) minmax(0,1fr);height:100%}
+.list{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.listhead{padding:14px;border-bottom:1px solid var(--line);display:grid;gap:10px}
+.listhead .row{display:flex;gap:8px}
+.searchbox{position:relative;flex:1}
+.searchbox .i{position:absolute;left:10px;top:10px;color:var(--ink-3)}
+.searchbox .input{padding-left:33px}
+.items{overflow:auto;flex:1}
+.item{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:12px 14px 12px 18px;position:relative}
+.item::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--flag,transparent)}
+.item:hover{background:var(--surface-2)}
+.item[aria-selected=true]{background:var(--accent-soft)}
+.item.s-OK{--flag:var(--ok)} .item.s-MISMATCH,.item.s-FAILED{--flag:var(--bad)} .item.s-NEEDS_REVIEW{--flag:var(--warn-flag)}
+.item .r1{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.item .r1 b{font-weight:600}
+.item .r1 span{color:var(--ink-3)}
+.item .subj{margin:2px 0 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;color:var(--ink-2)}
+.item .r3{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.item .r3 .meter{margin-left:auto}
+.more{padding:12px 14px}
+.detail{min-width:0;min-height:0;display:flex;flex-direction:column}
+.dhead{padding:16px 24px 0;background:var(--surface);border-bottom:1px solid var(--line)}
+.dhead h2{margin:0 0 4px;font-size:18px;line-height:1.35;font-weight:600;overflow-wrap:anywhere}
+.dmeta{display:flex;flex-wrap:wrap;gap:2px 16px;color:var(--ink-2);font-size:13px}
+.back{display:none;margin-bottom:8px}
+.tabs{display:flex;gap:2px;margin-top:12px;overflow-x:auto}
+.tab{border:0;background:none;padding:9px 12px;color:var(--ink-2);border-bottom:2px solid transparent;font-weight:500;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected=true]{color:var(--ink);border-color:var(--accent)}
+.dbody{overflow:auto;padding:20px 24px 48px;display:grid;gap:16px;align-content:start;flex:1}
+
+.verdict{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 24px;align-items:center;padding:16px 18px;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--flag);border-radius:12px}
+.verdict.ok{--flag:var(--ok)} .verdict.bad{--flag:var(--bad)} .verdict.warn{--flag:var(--warn-flag)} .verdict.neutral{--flag:var(--line-strong)}
+.verdict h3{margin:0;font-size:20px;line-height:1.25;font-weight:600}
+.verdict p{margin:3px 0 0;color:var(--ink-2)}
+.verdict .side{text-align:right;color:var(--ink-2);font-size:13px;display:grid;gap:6px;justify-items:end}
+
+.tablewrap{overflow-x:auto}
+.matrix{width:100%;min-width:660px;border-collapse:collapse}
+.matrix th{text-align:left;font-weight:600;font-size:13px;color:var(--ink-2);padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface-2);white-space:nowrap}
+.matrix td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.matrix tr:last-child td{border-bottom:0}
+.matrix td:first-child{box-shadow:inset 5px 0 0 var(--flag,transparent);padding-left:20px;font-weight:500;white-space:nowrap}
+.matrix td:first-child small{display:block;font-weight:400;color:var(--ink-3)}
+.matrix .row-match{--flag:var(--ok)}
+.matrix .row-mismatch{--flag:var(--bad);background:var(--bad-bg)}
+.matrix .row-missing{--flag:var(--warn-flag);background:var(--warn-bg)}
+.val{overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.val small{display:block;color:var(--ink-3);font-size:12px}
+.val .fmt{color:var(--ink-3);font-size:12px}
+.row-mismatch .val>b,.row-missing .val>b{font-weight:600}
+.blank{color:var(--warn);font-weight:500}
+.delta{display:block;margin-top:4px;font-size:12px;color:var(--bad);font-variant-numeric:tabular-nums}
+.matrix textarea,.matrix input{width:100%;padding:6px 8px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);resize:vertical}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.actions .sp{flex:1}
+.note{display:flex;gap:10px;padding:12px 14px;border-radius:10px;background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--ink)}
+.note.bad{background:var(--bad-bg);border-color:var(--bad-line)}
+.note.ok{background:var(--ok-bg);border-color:var(--ok-line)}
+.note h4{margin:0 0 2px;font-size:14px}
+.note p{margin:0;color:var(--ink-2)}
+.msg{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6;max-width:74ch}
+.draft{width:100%;min-height:260px;padding:12px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface-2);font:13px/1.6 var(--mono);resize:vertical}
+.att{display:grid;gap:8px}
+.att-h{display:flex;align-items:center;gap:10px}
+.att-h b{overflow-wrap:anywhere}
+.att-h small{color:var(--ink-3)}
+pre.doc{margin:0;padding:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;font:12.5px/1.6 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto}
+.log{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.log li{display:grid;grid-template-columns:110px 1fr;gap:12px;color:var(--ink-2)}
+.log time{color:var(--ink-3);font-size:13px}
+.empty{display:grid;place-items:center;text-align:center;padding:60px 24px;color:var(--ink-2);height:100%}
+.empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:4px}
+
+/* New verification */
+.verify{display:grid;grid-template-columns:minmax(300px,410px) minmax(0,1fr);gap:20px;padding:20px 24px 48px;align-items:start}
+.scen{display:grid;gap:8px}
+.scen button{display:block;text-align:left;padding:10px 12px 10px 16px;border:1px solid var(--line);border-left:5px solid var(--flag);border-radius:10px;background:var(--surface)}
+.scen button:hover{background:var(--surface-2)}
+.scen button[aria-pressed=true]{outline:2px solid var(--accent);outline-offset:-2px}
+.scen .ok{--flag:var(--ok)} .scen .bad{--flag:var(--bad)} .scen .warn{--flag:var(--warn-flag)}
+.scen b{display:block;font-weight:600}
+.scen span{color:var(--ink-2);font-size:13px}
+.drop{display:grid;gap:2px;justify-items:start;padding:14px;border:1.5px dashed var(--line-strong);border-radius:10px;background:var(--surface-2);cursor:pointer;position:relative}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop.has{border-style:solid;border-color:var(--ok-line);background:var(--ok-bg)}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.drop b{font-weight:600}
+.drop span{color:var(--ink-2);font-size:13px;overflow-wrap:anywhere}
+.stack{display:grid;gap:14px}
+.h{margin:0;font-size:14px;font-weight:600}
+.sub{margin:0;color:var(--ink-2);font-size:13px}
+
+/* Benchmark */
+.bench{padding:20px 24px 48px;display:grid;gap:16px;max-width:1180px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.kpi{padding:14px 16px}
+.kpi b{display:block;font-size:26px;line-height:1.2;font-weight:600;font-variant-numeric:tabular-nums}
+.kpi span{color:var(--ink-2);font-size:13px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.bars{display:grid;gap:10px}
+.bar{display:grid;grid-template-columns:120px 1fr 44px;gap:10px;align-items:center;font-size:13px}
+.bar .t{height:10px;border-radius:3px;background:var(--neutral-bg);overflow:hidden}
+.bar .t i{display:block;height:100%;background:var(--accent)}
+.bar em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+
+#toasts{position:fixed;right:20px;bottom:20px;display:grid;gap:8px;z-index:50}
+.toast{padding:10px 14px;border-radius:9px;background:var(--ink);color:var(--surface);box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:360px}
+.toast.bad{background:var(--bad);color:#fff}
+
+.dataset-banner{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 12px;background:var(--surface-2);border:1px solid var(--line-strong);border-radius:8px;font-size:12px;color:var(--ink-2);margin-bottom:6px}
+.dataset-banner.active{background:var(--ok-bg);border-color:var(--ok-line);color:var(--ok)}
+.dataset-banner b{color:var(--ink);font-weight:600}
+.dataset-banner.active b{color:var(--ok)}
+
+@media (max-width:1000px){
+  .app{grid-template-columns:64px minmax(0,1fr)}
+  .rail{padding:12px 8px;align-items:center}
+  .rail .lbl,.brand div,.nav-label,.count,.rail-foot span{display:none}
+  .nav,.newbtn{width:auto;padding:10px}
+  .verify{grid-template-columns:1fr}
+}
+@media (max-width:820px){
+  .md{grid-template-columns:1fr}
+  .md .detail{display:none}
+  .md.show-detail .list{display:none}
+  .md.show-detail .detail{display:flex}
+  .back{display:inline-flex}
+  .verdict{grid-template-columns:1fr}
+  .verdict .side{justify-items:start;text-align:left}
+  .top .hide-sm{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-anchor" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M14 2v6h6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></symbol>
+</svg>
+
+<div class="app">
+  <nav class="rail" aria-label="Main">
+    <div class="brand">
+      <span class="logo"><svg class="i" style="width:20px;height:20px"><use href="#i-anchor"/></svg></span>
+      <div><b>SDOC</b><small>Verification desk</small></div>
+    </div>
+    <button class="newbtn" data-act="nav" data-view="verify"><svg class="i"><use href="#i-plus"/></svg><span class="lbl">New verification</span></button>
+    <div class="nav-label">Work queues</div>
+    <div id="railWork"></div>
+    <div class="nav-label">Organizer dataset</div>
+    <div id="railOrganizerBox"></div>
+    <div class="nav-label">Insights</div>
+    <div id="railInsights"></div>
+    <div class="rail-foot"><span class="avatar">DD</span><span>Docs desk</span></div>
+  </nav>
+  <header class="top">
+    <h1 id="title">Inbox</h1>
+    <span class="sp"></span>
+    <button class="btn sm" id="btnOrganizer" data-act="toggleOrganizer" title="Load or switch the 520 emails provided by the organizer"><svg class="i"><use href="#i-database"/></svg><span id="btnOrganizerTxt">Load Organizer Data (520)</span></button>
+    <span id="apiPill" class="pill">Connecting</span>
+    <button class="btn sm hide-sm" data-act="export"><svg class="i"><use href="#i-download"/></svg>Export submission.json</button>
+  </header>
+  <main class="main"><div class="view" id="view"></div></main>
+</div>
+<div id="toasts" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+/* =====================================================================
+   1. CONFIG AND API
+   Open with ?demo to force sample data, or ?api=http://127.0.0.1:8081
+   when this file is served from somewhere else.
+   ===================================================================== */
+const qs = new URLSearchParams(location.search);
+const defaultApi = (location.protocol === 'file:' || location.port === '5500' || location.port === '3000') ? 'http://127.0.0.1:8081' : '';
+const API = (qs.get('api') || defaultApi).replace(/\/$/, '');
+const FORCE_DEMO = qs.has('demo');
+
+async function jget(path){
+  const r = await fetch(API + path, {headers:{Accept:'application/json'}});
+  if(!r.ok) throw new Error(r.status + ' ' + r.statusText);
+  return r.json();
+}
+async function jpost(path, body){
+  const r = await fetch(API + path, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  if(!r.ok) throw new Error(r.status + ' ' + r.statusText);
+  return r.json();
+}
+
+/* =====================================================================
+   2. DOMAIN: the seven compared fields, parsing, comparison
+   ===================================================================== */
+const FIELDS = [
+  {key:'shipper',           label:'Shipper',           type:'party'},
+  {key:'consignee',         label:'Consignee',         type:'party'},
+  {key:'notify_party',      label:'Notify party',      type:'party'},
+  {key:'port_of_loading',   label:'Port of loading',   type:'port',  short:'POL'},
+  {key:'port_of_discharge', label:'Port of discharge', type:'port',  short:'POD'},
+  {key:'container_count',   label:'Container count',   type:'count'},
+  {key:'gross_weight_kg',   label:'Gross weight (kg)', type:'weight'},
+];
+const ALIASES = {
+  shipper:['shipper','shipper / exporter','shipper/exporter','exporter','发货人'],
+  consignee:['consignee','to the order of','收货人'],
+  notify_party:['notify party','notify','notify party / intermediate consignee','通知人'],
+  port_of_loading:['port of loading','load port','loading port','pol','装货港'],
+  port_of_discharge:['port of discharge','discharge port','pod','卸货港'],
+  container_count:['container count','containers','container','container(s)','no. of containers','number of containers','qty','箱数'],
+  gross_weight_kg:['gross weight','gross weight (kg)','gross weight kg','weight','毛重'],
+};
+const LABEL_TO_KEY = {};
+for(const [k, list] of Object.entries(ALIASES)) list.forEach(a => LABEL_TO_KEY[a] = k);
+
+const CATS = {
+  BL_COMPARISON:'Document check', SI_REQUEST:'SI request',
+  INVOICE_QUERY:'Invoice query', GENERAL:'General', SPAM:'Spam',
+};
+const REASONS = {
+  missing_value:'Missing value', wrong_doc_type:'Wrong document type',
+  unreadable:'Unreadable document', missing_attachment:'Missing attachment',
+};
+const STATUS_LABEL = {OK:'Clean match', MISMATCH:'Mismatch', NEEDS_REVIEW:'Needs review', FAILED:'Failed', ROUTED:'Routed'};
+
+const isBlank = v => /^(|tba|tbc|n\/?a|\?+|_+|-+)$/i.test(String(v ?? '').trim());
+const normText = s => String(s).toLowerCase().replace(/\./g,'').replace(/[,;:()|\-\/&']/g,' ').replace(/\s+/g,' ').trim();
+const stripSuffix = s => s.replace(/\b(ltd|limited|pte|pty|gmbh|co|inc|llc|sdn|bhd|pt|cv|corp|corporation|company)\b/g,' ').replace(/\s+/g,' ').trim();
+const partyKey = s => stripSuffix(normText(String(s).split('\n')[0]));
+const portKey = s => normText(String(s).replace(/\([^)]*\)/g,'').replace(/,.*$/,''));
+const intOf = s => { const m = String(s).match(/\d[\d,]*/); return m ? parseInt(m[0].replace(/,/g,''),10) : NaN; };
+const numOf = s => parseFloat(String(s).replace(/[^\d.]/g,''));
+
+function same(type, a, b){
+  if(type === 'party'){
+    const x = partyKey(a), y = partyKey(b);
+    if(x === y) return true;
+    const [s, l] = x.length <= y.length ? [x, y] : [y, x];
+    return l.startsWith(s) && /\d/.test(l.slice(s.length));   // extra text is only an address
+  }
+  if(type === 'port') return portKey(a) === portKey(b);
+  if(type === 'count') return intOf(a) === intOf(b);
+  return numOf(a) === numOf(b);
+}
+
+function evaluate(fields){
+  const states = {}, missing = [], mismatches = [];
+  for(const f of FIELDS){
+    const v = fields?.[f.key] || {};
+    if(isBlank(v.si) || isBlank(v.bl)){ states[f.key] = 'missing'; missing.push(f.key); continue; }
+    const ok = same(f.type, v.si, v.bl);
+    states[f.key] = ok ? 'match' : 'mismatch';
+    if(!ok) mismatches.push(f.key);
+  }
+  let status = 'OK', reason = null;
+  if(missing.length){ status = 'NEEDS_REVIEW'; reason = 'missing_value'; }
+  else if(mismatches.length) status = 'MISMATCH';
+  return {status, reason, states, missing, mismatches};
+}
+
+/* Reads "Label: value" text, joins continuation lines, maps label aliases to fields */
+function parseText(text){
+  const out = {}; let cur = null;
+  for(const line of String(text || '').split(/\r?\n/)){
+    const m = line.match(/^\s*([^:|]{2,45}?)\s*[:|]\s*(.*)$/);
+    if(m){
+      const key = LABEL_TO_KEY[m[1].trim().toLowerCase().replace(/\s+/g,' ')];
+      if(key){ out[key] = m[2].trim(); cur = key; continue; }
+      cur = null; continue;
+    }
+    if(cur && line.trim()) out[cur] += '\n' + line.trim();
+  }
+  const head = String(text || '').slice(0, 400).toLowerCase();
+  let docType = 'unknown';
+  if(/packing list|commercial invoice|certificate of origin/.test(head)) docType = 'other';
+  else if(/bill of lading|b\/l/.test(head)) docType = 'bl';
+  else if(/shipping instruction/.test(head)) docType = 'si';
+  return {fields: out, docType, count: Object.keys(out).length};
+}
+
+/* =====================================================================
+   3. NORMALISER
+   ADAPT HERE if your API returns a different shape. Everything the UI
+   renders passes through normalizeEmail() and applyEval().
+   ===================================================================== */
+const up = s => String(s ?? '').trim().toUpperCase().replace(/\s+/g,'_');
+const STATUS_ALIAS = {MATCH:'OK', CLEAN:'OK', PASS:'OK', PASSED:'OK', DISCREPANCY:'MISMATCH', REVIEW:'NEEDS_REVIEW'};
+
+function pickFields(src){
+  if(!src) return null;
+  if(Array.isArray(src)){                                    // [{field, si, bl}]
+    const o = {};
+    src.forEach(r => { const k = r.field ?? r.name ?? r.key; if(k) o[k] = {si:r.si ?? r.si_value ?? '', bl:r.bl ?? r.bl_value ?? ''}; });
+    return Object.keys(o).length ? o : null;
+  }
+  if(src.si && src.bl){                                      // {si:{k:v}, bl:{k:v}}
+    const o = {}; FIELDS.forEach(f => o[f.key] = {si:src.si[f.key] ?? '', bl:src.bl[f.key] ?? ''}); return o;
+  }
+  const o = {};                                              // {k:{si,bl}}
+  FIELDS.forEach(f => { if(src[f.key]) o[f.key] = {si:src[f.key].si ?? '', bl:src[f.key].bl ?? ''}; });
+  return Object.keys(o).length ? o : null;
+}
+
+function normalizeEmail(r, prev = {}){
+  const d = r.decision || r.result || {};
+  const emailObj = r.email || {};
+  const e = {
+    id: r.email_id ?? emailObj.email_id ?? r.id ?? prev.id,
+    from: r.from ?? emailObj.from ?? r.sender ?? r.sender_email ?? prev.from ?? '',
+    subject: r.subject ?? emailObj.subject ?? prev.subject ?? '(no subject)',
+    body: r.body ?? emailObj.body ?? r.text ?? prev.body ?? '',
+    date: r.date ?? emailObj.date ?? r.received_at ?? prev.date ?? '',
+    category: up(r.category ?? emailObj.category ?? d.category ?? prev.category ?? 'GENERAL'),
+    attachments: (r.attachments ?? emailObj.attachments ?? prev.attachments ?? []).map(a => ({
+      name: a.filename ?? a.name ?? 'attachment',
+      size: a.size_kb != null ? a.size_kb + ' KB' : (a.size != null ? (typeof a.size === 'number' ? (a.size/1024).toFixed(1) + ' KB' : a.size) : ''),
+      state: up(a.status ?? a.doc_type ?? a.state ?? 'OK'),
+      text: a.text ?? a.preview ?? a.text_preview ?? '',
+    })),
+    fields: pickFields(d.fields ?? r.fields ?? d.extracted ?? r.extracted) ?? prev.fields ?? null,
+    error: 'error' in r ? (r.error || null) : (prev.error ?? null),
+    activity: prev.activity ?? [],
+    reviewed: prev.reviewed ?? null,
+    sent: prev.sent ?? false,
+    _retryRaw: r._retryRaw ?? prev._retryRaw ?? null,
+    _full: prev._full ?? (!S.live),
+  };
+  const bs = STATUS_ALIAS[up(d.status ?? r.status)] ?? up(d.status ?? r.status);
+  const list = d.defect_fields ?? d.mismatched_fields ?? d.mismatches ?? r.defect_fields ?? r.mismatched_fields ?? null;
+  e.backend = prev.backend === null ? null : (bs ? {
+    status: bs,
+    reason: (d.reason ?? d.review_reason ?? r.reason ?? r.review_reason ?? null),
+    mismatches: list ? list.map(x => typeof x === 'string' ? x : (x.field ?? x.key)) : null,
+    detail: d.detail ?? d.message ?? r.reason_detail ?? '',
+  } : (prev.backend ?? null));
+  e.reasonDetail = e.backend?.detail || prev.reasonDetail || '';
+  return applyEval(e);
+}
+
+/* Decide status, review reason and per-field states for one record */
+function applyEval(e){
+  e.states = null; e.mismatches = []; e.missing = [];
+  if(e.error){ e.status = 'FAILED'; return e; }
+  if(e.category !== 'BL_COMPARISON'){ e.status = 'ROUTED'; e.reason = null; return e; }
+
+  if(!e.fields){                                             // derive from attachment text when the API sends none
+    const parsed = e.attachments.filter(a => a.text).map(a => ({a, p: parseText(a.text)}));
+    const si = parsed.find(x => /(^|[^a-z])si([^a-z]|$)|instruction/i.test(x.a.name)) || parsed[0];
+    const bl = parsed.find(x => x !== si && /bl|lading/i.test(x.a.name)) || parsed.find(x => x !== si);
+    if(si && bl && si.p.count && bl.p.count){
+      e.fields = {}; FIELDS.forEach(f => e.fields[f.key] = {si: si.p.fields[f.key] ?? '', bl: bl.p.fields[f.key] ?? ''});
+    }
+  }
+  const has = e.fields && FIELDS.some(f => !isBlank(e.fields[f.key]?.si) || !isBlank(e.fields[f.key]?.bl));
+  const ev = has ? evaluate(e.fields) : null;
+  const b = e.backend;
+
+  if(b && b.status){
+    e.status = b.status;
+    e.reason = b.status === 'NEEDS_REVIEW' ? (b.reason || ev?.reason || 'unreadable') : null;
+    if(ev){
+      e.states = {...ev.states};
+      if(b.status === 'OK') Object.keys(e.states).forEach(k => { if(e.states[k] === 'mismatch') e.states[k] = 'match'; });
+      if(b.status === 'MISMATCH' && b.mismatches) Object.keys(e.states).forEach(k => { if(e.states[k] !== 'missing') e.states[k] = b.mismatches.includes(k) ? 'mismatch' : 'match'; });
+    }
+    e.mismatches = b.status === 'MISMATCH' ? (b.mismatches ?? ev?.mismatches ?? []) : [];
+    e.missing = ev?.missing ?? [];
+    return e;
+  }
+  if(ev){
+    e.status = ev.status; e.reason = ev.reason; e.states = ev.states; e.mismatches = ev.mismatches; e.missing = ev.missing;
+    return e;
+  }
+  e.status = 'NEEDS_REVIEW'; e.reason = e.reason || (e.attachments.length < 2 ? 'missing_attachment' : 'unreadable');
+  return e;
+}
+
+/* =====================================================================
+   4. SAMPLE DATA (used when the API is not reachable)
+   ===================================================================== */
+const A = {
+  shipper:'PT Indo Wood Resources\nJl. Industri Raya No. 45, Jakarta 14350, Indonesia',
+  consignee:'Sydney Timber Importers Pty Ltd\n78 Botany Rd, Alexandria NSW 2015, Australia',
+  notify_party:'Indo Wood Logistics Singapore',
+  port_of_loading:'Jakarta (IDJKT)', port_of_discharge:'Sydney (AUSAU)',
+  container_count:"1 x 20'GP", gross_weight_kg:'18,200 KG',
+};
+const B = {
+  shipper:'Moonlight Trading SAC\nAv. Argentina 1240, Callao, Peru',
+  consignee:'Pacific Fibre Imports Ltd\n22 Harbour St, Auckland 1010, New Zealand',
+  notify_party:'Pacific Fibre Imports Ltd',
+  port_of_loading:'Callao (PECLL)', port_of_discharge:'Auckland (NZAKL)',
+  container_count:"2 x 40'HC", gross_weight_kg:'44,610 KG',
+};
+const DOC_LABELS_SI = {shipper:'Shipper',consignee:'Consignee',notify_party:'Notify Party',port_of_loading:'Port of Loading',port_of_discharge:'Port of Discharge',container_count:'Containers',gross_weight_kg:'Gross Weight'};
+const DOC_LABELS_BL = {shipper:'Shipper / Exporter',consignee:'Consignee',notify_party:'Notify Party',port_of_loading:'Load Port',port_of_discharge:'Discharge Port',container_count:'Container(s)',gross_weight_kg:'Weight'};
+const docText = (kind, f) => (kind === 'SI' ? 'SHIPPING INSTRUCTION\n' : 'DRAFT BILL OF LADING\n') +
+  FIELDS.map(x => `${(kind === 'SI' ? DOC_LABELS_SI : DOC_LABELS_BL)[x.key]}: ${f[x.key]}`).join('\n');
+
+let mkN = 0;
+function mk(id, from, subject, category, body, o = {}){
+  mkN++;
+  const raw = {email_id:id, from, subject, category, body, date:`20 Sep, ${String(8 + Math.floor(mkN / 6)).padStart(2,'0')}:${String((mkN * 7) % 60).padStart(2,'0')}`, _full:true};
+  if(o.si){
+    raw.attachments = [
+      {filename:`${id}_SI.txt`, size_kb:0.6, status:'OK', text:docText('SI', o.si)},
+      {filename:`${id}_BL.txt`, size_kb:0.6, status:'OK', text:docText('BL', o.bl)},
+    ];
+  }
+  if(o.attachments) raw.attachments = o.attachments;
+  if(o.decision) raw.decision = o.decision;
+  if(o.error) raw.error = o.error;
+  if(o.retry) raw._retryRaw = o.retry;
+  return raw;
+}
+const DEMO = [
+  mk('email_001','aziztz','TO CONFIRM DOCS _ 5RSG-00133 _ CALLAO_PERU _ MOONLIGHT TRADING','BL_COMPARISON','Dear Team,\n\nPlease find attached the SI and draft BL. Kindly confirm the BL is in order.\n\nRegards,\nAziz',{si:B,bl:B}),
+  mk('email_002','nirmala','RE: LOCAL CHARGES FOB - KARGOSMAR - 5AKR-61849','INVOICE_QUERY','Hi, can you clarify the local charges on invoice INV-88231? The THC line looks higher than quoted.'),
+  mk('email_003','exports','RE: TO CONFIRM DOCS _ 5AAT-03056 _ AQABA_JORDAN','BL_COMPARISON','Please check the attached draft BL against our SI.',
+     {si:{...B, port_of_loading:'Callao (PECLL)', gross_weight_kg:'44,610 KG'}, bl:{...B, port_of_loading:'CALLAO', gross_weight_kg:'44610 KGS', shipper:'Moonlight Trading S.A.C.\nAv. Argentina 1240, Callao, Peru'}}),
+  mk('email_004','docs','REQUEST BL DRAFT _ PO 26067 _ COATED IVORY BOARD','BL_COMPARISON','Dear team, please check the draft BL for PO 26067 and revert today.',
+     {si:{...A, container_count:'3', gross_weight_kg:'22,000 KG'}, bl:{...A, container_count:'4', gross_weight_kg:'22,000 KG'}}),
+  mk('email_005','hanna_azhari','RE: Draft BL INDO SUKSES 65 V.51NW1 SINGAPORE - amend BL','BL_COMPARISON','Please see the amended draft BL and confirm.',{si:A,bl:A}),
+  mk('email_006','guancheng_lee','Draft BL MMSS 2507 V.257087E NHAVA SHEVA - amend BL','BL_COMPARISON','Attached are the SI and the carrier draft. Let us know if anything is off.',
+     {si:{...B, port_of_discharge:'Nhava Sheva (INNSA)', gross_weight_kg:'131,058 KG'}, bl:{...B, port_of_discharge:'Mundra (INMUN)', gross_weight_kg:'124,999 KG'}}),
+  mk('email_007','k.tanaka','Latest SI for booking CMA-10877?','SI_REQUEST','Hi, could you resend the latest shipping instruction for booking CMA-10877? We need it for the customs pre-lodgement.'),
+  mk('email_008','prizes-team','Congratulations! You have been selected for a $500 gift card','SPAM','Click the link below within 24 hours to claim your reward. Verify your account details to continue.'),
+  mk('email_009','portops','Vessel berthing update: MV Harmony, 12 Sept','GENERAL','FYI, berthing moved to 14:00 due to tide. No action needed.'),
+  mk('email_310','logistics@indowood.co.id','Review Draft BL - Booking CMA-10294','BL_COMPARISON','Dear CMA CGM team,\n\nPlease find draft BL attached. Note that the buyer final details are pending confirmation.\n\nRegards,\nIndo Wood Resources',
+     {si:{...A, port_of_loading:'Shanghai (CNSHA)'}, bl:{...A, port_of_loading:'Ningbo (CNNGB)'}}),
+  mk('email_502','hari_mardianto','TO CONFIRM DOCS _ 5RSG-63369 _ ASHDOD_ISRAEL _ ROXCEL TRADING GMBH _ MCLSIN5054296','BL_COMPARISON','Dear Team,\n\nPlease find attached the SI and the Packing List for MCLSINJEA2508070. Kindly confirm the BL is in order.\n\n(Note: the second attachment is a Packing List, not the draft BL.)',
+     {attachments:[
+       {filename:'email_502_SI.txt',size_kb:0.6,status:'OK',text:docText('SI',A)},
+       {filename:'email_502_BL.txt',size_kb:0.4,status:'WRONG_DOC_TYPE',text:'PACKING LIST\nInvoice ref: MCLSINJEA2508070\nPackages: 14 pallets\nNet weight: 17,450 KG\nGross weight: 18,200 KG'},
+     ], decision:{status:'NEEDS_REVIEW', reason:'wrong_doc_type', detail:'The second attachment is a packing list. A draft bill of lading is needed to run the comparison.'}}),
+  mk('email_511','logistics@indowood.co.id','Review Draft BL - Booking CMA-10295','BL_COMPARISON','Dear CMA CGM team,\n\nPlease find draft BL attached. Buyer final details are pending confirmation.\n\nRegards,\nIndo Wood Resources',
+     {si:{...A, consignee:'TBA'}, bl:A}),
+  mk('email_514','v.rossi','Please check BL draft, booking MSC-77120','BL_COMPARISON','Hi, please check the draft BL for MSC-77120 against our SI.',
+     {attachments:[{filename:'draft_bl.txt',size_kb:0.6,status:'OK',text:docText('BL',A)}],
+      decision:{status:'NEEDS_REVIEW', reason:'missing_attachment', detail:'A comparison was requested but only one document is attached. The shipping instruction is missing.'}}),
+  mk('email_517','docs@fareast.example','BL check MAEU-20933 (scan)','BL_COMPARISON','Scanned copies attached, please verify.',
+     {attachments:[
+       {filename:'si.pdf',size_kb:212,status:'OK',text:docText('SI',A)},
+       {filename:'draft_bl.pdf',size_kb:388,status:'UNREADABLE',text:''},
+     ], decision:{status:'NEEDS_REVIEW', reason:'unreadable', detail:'draft_bl.pdf has a corrupt byte stream and no extractable text.'}}),
+  mk('email_520','ops@oceanlink.example','Draft BL for confirmation, booking ONE-55871','BL_COMPARISON','Draft BL and SI attached for your check.',
+     {error:'The parser timed out after 30 seconds while reading draft_bl.pdf.',
+      attachments:[{filename:'si.pdf',size_kb:140,status:'OK',text:''},{filename:'draft_bl.pdf',size_kb:2410,status:'OK',text:''}],
+      retry:{attachments:[
+        {filename:'si.pdf',size_kb:140,status:'OK',text:docText('SI',B)},
+        {filename:'draft_bl.pdf',size_kb:2410,status:'OK',text:docText('BL',B)},
+      ]}}),
+];
+
+const PRESETS = [
+  {id:'clean', title:'Clean match', desc:'All seven fields agree.', tone:'ok', si:A, bl:A},
+  {id:'wc', title:'Weight and container mismatch', desc:'Gross weight is 6,058 kg lower and 5 containers against 6.', tone:'bad',
+    si:{...A, container_count:"6 x 40'HC", gross_weight_kg:'131,058 KG'}, bl:{...A, container_count:"5 x 40'HC", gross_weight_kg:'125,000 KG'}},
+  {id:'port', title:'Port of loading differs', desc:'The SI books Shanghai but the draft BL shows Ningbo.', tone:'bad',
+    si:{...A, port_of_loading:'Shanghai (CNSHA)'}, bl:{...A, port_of_loading:'Ningbo (CNNGB)'}},
+  {id:'tba', title:'Consignee marked TBA', desc:'A mandatory SI value is a placeholder.', tone:'warn', si:{...A, consignee:'TBA'}, bl:A},
+  {id:'wrong', title:'Packing list attached', desc:'The second document is not a bill of lading.', tone:'warn', force:{status:'NEEDS_REVIEW', reason:'wrong_doc_type', detail:'The second attachment is a packing list. A draft bill of lading is needed to run the comparison.'}},
+  {id:'corrupt', title:'Corrupted document', desc:'The file has no readable text.', tone:'warn', force:{status:'NEEDS_REVIEW', reason:'unreadable', detail:'The draft BL has a corrupt byte stream and no extractable text.'}},
+];
+function normalizePresets(p){
+  const rows = Array.isArray(p) ? p : (p.presets || p.scenarios || []);
+  const ok = rows.map((r, i) => ({
+    id: r.id ?? 'p' + i, title: r.title ?? r.name, desc: r.description ?? r.desc ?? '',
+    tone: r.tone ?? (/ok|pass|clean/i.test(r.status ?? '') ? 'ok' : /review|guard/i.test(r.status ?? '') ? 'warn' : 'bad'),
+    si: r.si ?? r.si_fields, bl: r.bl ?? r.bl_fields,
+  })).filter(x => x.title && x.si && x.bl);
+  return ok.length ? ok : null;
+}
+
+/* =====================================================================
+   5. STATE
+   ===================================================================== */
+const S = {
+  live:false, emails:[], presets:[], metrics:null,
+  dataSource:'demo', organizerEmails:null, demoEmails:null,
+  loadingOrganizer:false,
+  view:'inbox', sel:null, selIdx:0, tab:'compare',
+  q:'', fCat:'ALL', fStatus:'ALL', limit:60,
+  edit:null, drafts:{}, busy:new Set(), mobileDetail:false, _mdView:null,
+  verify:{preset:null, si:null, bl:null, result:null, running:false},
+};
+
+async function loadOrganizerData(){
+  if(S.loadingOrganizer) return;
+  if(S.organizerEmails && S.organizerEmails.length){
+    S.dataSource = 'organizer';
+    S.emails = S.organizerEmails;
+    S.sel = null; S.selIdx = 0; S._mdView = null;
+    toast(`Active: Organizer 520 dataset (${S.emails.length} emails)`);
+    rerender();
+    return;
+  }
+  S.loadingOrganizer = true;
+  paintChrome();
+  toast('Loading 520 organizer evaluation emails from backend...');
+  try{
+    const list = await jget('/api/emails');
+    const rows = Array.isArray(list) ? list : (list.emails || list.items || []);
+    S.live = true;
+    S.organizerEmails = rows.map(r => normalizeEmail(r));
+    S.dataSource = 'organizer';
+    S.emails = S.organizerEmails;
+    S.sel = null; S.selIdx = 0; S._mdView = null;
+    toast(`Successfully loaded ${S.organizerEmails.length} organizer evaluation emails!`);
+  }catch(err){
+    toast('Could not load organizer emails: ' + err.message, true);
+  }finally{
+    S.loadingOrganizer = false;
+    rerender();
+  }
+}
+
+function unloadOrganizerData(){
+  S.dataSource = 'demo';
+  S.emails = S.demoEmails || DEMO.map(r => normalizeEmail(r));
+  S.sel = null; S.selIdx = 0; S._mdView = null;
+  toast('Switched to interactive sample dataset');
+  rerender();
+}
+
+function toggleOrganizer(){
+  if(S.dataSource === 'organizer') unloadOrganizerData();
+  else loadOrganizerData();
+}
+const byId = id => id === 'verify' ? S.verify.result : S.emails.find(e => e.id === id);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const icon = n => `<svg class="i" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const nowStr = () => new Date().toLocaleString('en-GB', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
+const flat = v => String(v ?? '').replace(/\s*\n\s*/g, ', ');
+const shortFrom = f => String(f).split('@')[0];
+const fieldLabel = k => FIELDS.find(f => f.key === k)?.label ?? k;
+const log = (e, text) => e.activity.unshift({t: nowStr(), text});
+
+function toast(msg, bad){
+  const t = document.createElement('div'); t.className = 'toast' + (bad ? ' bad' : ''); t.textContent = msg;
+  $('#toasts').append(t); setTimeout(() => t.remove(), 4200);
+}
+
+/* =====================================================================
+   6. SMALL RENDER HELPERS
+   ===================================================================== */
+function statusChip(e){
+  if(e.status === 'OK') return `<span class="chip ok">${icon('check')}Clean match</span>`;
+  if(e.status === 'MISMATCH') return `<span class="chip bad">${icon('x')}${e.mismatches.length} ${e.mismatches.length === 1 ? 'mismatch' : 'mismatches'}</span>`;
+  if(e.status === 'NEEDS_REVIEW') return `<span class="chip warn">${icon('flag')}${esc(REASONS[e.reason] || 'Needs review')}</span>`;
+  if(e.status === 'FAILED') return `<span class="chip bad">${icon('alert')}Processing failed</span>`;
+  return `<span class="chip">Routed</span>`;
+}
+const meter = (e, big) => e.states ? `<span class="meter${big ? ' lg' : ''}" role="img" aria-label="${FIELDS.filter(f => e.states[f.key] === 'match').length} of 7 fields match">${FIELDS.map(f => `<i class="${e.states[f.key] || ''}" title="${esc(f.label)}: ${e.states[f.key] || 'unknown'}"></i>`).join('')}</span>` : '';
+
+function valHTML(f, v, other, state){
+  if(isBlank(v)) return `<span class="blank">${String(v ?? '').trim() ? esc(String(v).trim()) + ' (placeholder)' : 'Not provided'}</span>`;
+  const lines = String(v).split('\n'); const first = esc(lines[0]); const rest = lines.slice(1).map(esc).join('<br>');
+  const fmt = state === 'match' && String(v).trim() !== String(other ?? '').trim() ? `<span class="fmt">Same value, different format</span>` : '';
+  return `<div class="val"><b>${first}</b>${rest ? `<small>${rest}</small>` : ''}${fmt ? `<small>${fmt}</small>` : ''}</div>`;
+}
+function deltaHTML(f, v){
+  if(!v || !['count','weight'].includes(f.type) || isBlank(v.si) || isBlank(v.bl)) return '';
+  const a = f.type === 'count' ? intOf(v.si) : numOf(v.si), b = f.type === 'count' ? intOf(v.bl) : numOf(v.bl);
+  if(isNaN(a) || isNaN(b) || a === b) return '';
+  const d = b - a; return `<span class="delta">BL is ${d > 0 ? '+' : '−'}${Math.abs(d).toLocaleString()}${f.type === 'weight' ? ' kg' : ''} against the SI</span>`;
+}
+
+/* =====================================================================
+   7. COMPARISON BLOCK (shared by the inbox, review queue and verify view)
+   ===================================================================== */
+function verdictHTML(e){
+  const n = FIELDS.filter(f => e.states?.[f.key] === 'match').length;
+  let cls = 'neutral', title = '', sub = '';
+  if(e.status === 'OK'){ cls = 'ok'; title = 'No mismatch detected'; sub = 'All seven fields match between the shipping instruction and the draft bill of lading.'; }
+  else if(e.status === 'MISMATCH'){ cls = 'bad'; title = `${e.mismatches.length} ${e.mismatches.length === 1 ? 'field differs' : 'fields differ'}`; sub = e.mismatches.map(fieldLabel).join(', ') + '. Ask the carrier for an amended draft.'; }
+  else if(e.status === 'NEEDS_REVIEW'){ cls = 'warn'; title = 'Needs review: ' + (REASONS[e.reason] || 'result not dependable').toLowerCase(); sub = reasonDetail(e); }
+  else if(e.status === 'FAILED'){ cls = 'bad'; title = 'Processing failed'; sub = e.error || 'The document could not be processed.'; }
+  else { title = 'Routed as ' + (CATS[e.category] || 'message').toLowerCase(); sub = 'Only document checks continue to the seven-field comparison.'; }
+  return `<section class="verdict ${cls}">
+    <div><h3>${esc(title)}</h3><p>${esc(sub)}</p></div>
+    <div class="side">${e.states ? meter(e, true) + `<span>${n} of 7 fields match</span>` : ''}</div>
+  </section>`;
+}
+function reasonDetail(e){
+  if(e.reasonDetail) return e.reasonDetail;
+  const miss = (e.missing || []).map(fieldLabel).join(', ');
+  return ({
+    missing_value: `${miss || 'A mandatory field'} has no usable value. Confirm it with the sender or enter it below.`,
+    wrong_doc_type: 'An attached file is not a shipping instruction or a draft bill of lading.',
+    unreadable: 'A document could not be read. Ask for a text-based copy, or enter the values manually.',
+    missing_attachment: 'A comparison was requested but fewer than two documents are attached.',
+  })[e.reason] || 'The result is not dependable enough to compare automatically.';
+}
+
+function matrixHTML(e, editing){
+  const draft = S.edit?.draft;
+  const rows = FIELDS.map(f => {
+    const v = (editing ? draft[f.key] : e.fields?.[f.key]) || {si:'', bl:''};
+    const st = e.states?.[f.key] || 'missing';
+    if(editing){
+      const ctl = side => f.type === 'party'
+        ? `<textarea rows="2" data-k="${f.key}" data-side="${side}" aria-label="${esc(f.label)} ${side.toUpperCase()}">${esc(v[side])}</textarea>`
+        : `<input data-k="${f.key}" data-side="${side}" value="${esc(v[side])}" aria-label="${esc(f.label)} ${side.toUpperCase()}">`;
+      return `<tr class="row-${st}"><td>${esc(f.label)}</td><td>${ctl('si')}</td><td>${ctl('bl')}</td><td></td></tr>`;
+    }
+    const res = st === 'match' ? `<span class="chip ok">${icon('check')}Match</span>`
+      : st === 'mismatch' ? `<span class="chip bad">${icon('x')}Mismatch</span>${deltaHTML(f, v)}`
+      : `<span class="chip warn">${icon('warn')}Missing</span>`;
+    return `<tr class="row-${st}"><td>${esc(f.label)}${f.short ? `<small>${f.short}</small>` : ''}</td>
+      <td>${valHTML(f, v.si, v.bl, st)}</td><td>${valHTML(f, v.bl, v.si, st)}</td><td>${res}</td></tr>`;
+  }).join('');
+  return `<div class="card"><div class="tablewrap"><table class="matrix">
+    <thead><tr><th scope="col">Field</th><th scope="col">Shipping instruction</th><th scope="col">Draft bill of lading</th><th scope="col">Result</th></tr></thead>
+    <tbody>${rows}</tbody></table></div></div>`;
+}
+
+function compareHTML(e){
+  if(e.status === 'ROUTED') return verdictHTML(e);
+  const editing = S.edit?.id === e.id;
+  const hasMatrix = e.fields || editing;
+  let out = verdictHTML(e);
+
+  if(e.status === 'FAILED'){
+    const busy = S.busy.has(e.id);
+    return out + `<div class="note bad"><div><h4>What happened</h4><p>${esc(e.error || 'Processing did not finish.')} Nothing was compared, so no result has been reported for this email.</p></div></div>
+      <div class="actions"><button class="btn primary" data-act="retry" data-id="${esc(e.id)}" ${busy ? 'disabled' : ''}>${icon('refresh').replace('class="i"', busy ? 'class="i spin"' : 'class="i"')}${busy ? 'Retrying' : 'Retry processing'}</button></div>`;
+  }
+  if(e.status === 'NEEDS_REVIEW' && !hasMatrix){
+    out += `<div class="note"><div><h4>Why the comparison could not run</h4><p>${esc(reasonDetail(e))} The system stopped here instead of guessing.</p></div></div>`;
+  }
+  if(hasMatrix) out += matrixHTML(e, editing);
+
+  const acts = [];
+  if(editing){
+    acts.push(`<button class="btn primary" data-act="saveEdit">${icon('check')}Save and re-verify</button>`, `<button class="btn" data-act="cancelEdit">Cancel</button>`);
+  }else{
+    if(e.status === 'NEEDS_REVIEW') acts.push(`<button class="btn primary" data-act="edit" data-id="${esc(e.id)}">${icon('pencil')}${hasMatrix ? 'Resolve values' : 'Enter values manually'}</button>`);
+    if(e.status === 'MISMATCH') acts.push(`<button class="btn primary" data-act="tab" data-tab="reply">${icon('send')}Draft amendment notice</button>`);
+    if(e.status === 'NEEDS_REVIEW') acts.push(`<button class="btn" data-act="tab" data-tab="reply">${icon('mail')}Draft request to sender</button>`);
+    if(e.status !== 'NEEDS_REVIEW') acts.push(`<button class="btn" data-act="edit" data-id="${esc(e.id)}">${icon('pencil')}Correct values</button>`);
+  }
+  if(acts.length) out += `<div class="actions">${acts.join('')}</div>`;
+  if(e.reviewed) out += `<div class="note ok"><div><h4>Checked by an operator</h4><p>Values were confirmed or corrected on ${esc(e.reviewed.at)}. The result above reflects that review.</p></div></div>`;
+  return out;
+}
+
+function genDraft(e){
+  const show = v => flat(v) || 'not provided';
+  if(e.status === 'MISMATCH'){
+    const n = e.mismatches.length;
+    return `Subject: Amendment request: ${e.subject}\n\nDear Documentation Team,\n\nWe compared the draft B/L with our shipping instruction and found ${n} discrepanc${n === 1 ? 'y' : 'ies'}:\n\n` +
+      e.mismatches.map((k, i) => `${i + 1}. ${fieldLabel(k)}: SI ${show(e.fields[k].si)} / B/L ${show(e.fields[k].bl)}`).join('\n') +
+      `\n\nPlease issue an amended draft B/L before cargo loading.\n\nBest regards,\nDocumentation Department`;
+  }
+  const ask = ({
+    missing_value: `The shipping instruction still shows a placeholder for: ${(e.missing || []).map(fieldLabel).join(', ') || 'a mandatory field'}. Please confirm the final value so we can complete the check.`,
+    wrong_doc_type: 'One of the attached files is not a draft bill of lading. Please resend the draft B/L so we can compare it with the shipping instruction.',
+    unreadable: 'We could not open one of the attachments. Please resend it as a text-based PDF or Word file.',
+    missing_attachment: 'Only one document was attached. Please send both the shipping instruction and the draft B/L.',
+  })[e.reason] || 'We could not complete the check. Please resend the documents.';
+  return `Subject: Re: ${e.subject}\n\nHello,\n\n${ask}\n\nBest regards,\nDocumentation Department`;
+}
+function replyHTML(e){
+  const isCarrier = e.status === 'MISMATCH';
+  const val = S.drafts[e.id] ?? genDraft(e);
+  return `<div class="card"><div class="card-h">${icon('mail')}${isCarrier ? 'Carrier amendment notice' : 'Request to sender'}
+      ${e.sent ? '<span class="chip ok" style="margin-left:auto">Logged as sent</span>' : ''}</div>
+    <div class="card-b stack">
+      <textarea class="draft" id="draft" aria-label="Message draft" data-id="${esc(e.id)}">${esc(val)}</textarea>
+      <div class="actions"><button class="btn" data-act="copy">${icon('copy')}Copy</button>
+        <button class="btn primary" data-act="send" data-id="${esc(e.id)}">${icon('send')}${isCarrier ? 'Send to carrier' : 'Send to sender'}</button></div>
+    </div></div>`;
+}
+
+/* =====================================================================
+   8. INBOX / REVIEW QUEUE / FAILURES  (one layout, three filters)
+   ===================================================================== */
+function visible(){
+  let a = S.emails;
+  if(S.view === 'review') a = a.filter(e => e.status === 'NEEDS_REVIEW');
+  else if(S.view === 'failures') a = a.filter(e => e.status === 'FAILED');
+  else{
+    if(S.fStatus !== 'ALL') a = a.filter(e => e.status === S.fStatus);
+    if(S.fCat !== 'ALL') a = a.filter(e => e.category === S.fCat);
+  }
+  const q = S.q.trim().toLowerCase();
+  if(q) a = a.filter(e => (e.id + ' ' + e.subject + ' ' + e.from).toLowerCase().includes(q));
+  return a;
+}
+const VIEW_TITLE = {inbox:'Inbox', review:'Review queue', failures:'Failures', verify:'New verification', benchmark:'Benchmark'};
+
+function bannerHTML(){
+  if(S.dataSource === 'organizer'){
+    return `<div class="dataset-banner active">
+      <span>Data: <b>Organizer 520 Dataset</b> (${S.emails.length})</span>
+      <button class="btn sm" data-act="unloadOrganizer" style="padding:2px 8px;font-size:11px" title="Switch back to interactive sample cases">Reset to Samples</button>
+    </div>`;
+  }
+  return `<div class="dataset-banner">
+    <span>Data: <b>Interactive Samples</b> (${S.emails.length})</span>
+    <button class="btn sm primary" data-act="loadOrganizer" style="padding:2px 8px;font-size:11px" title="Load the official 520 organizer emails" ${S.loadingOrganizer ? 'disabled' : ''}>
+      ${icon('database').replace('class="i"','class="i" style="width:12px;height:12px"')}${S.loadingOrganizer ? 'Loading...' : 'Load Organizer 520'}
+    </button>
+  </div>`;
+}
+
+function paintMD(){
+  const v = S.view;
+  if(S._mdView !== v || !$('#items')){
+    S._mdView = v;
+    const statusChips = v === 'inbox' ? `
+      <div class="seg" id="statusSeg" role="group" aria-label="Filter by result">
+        ${[['ALL','All'],['OK','Clean'],['MISMATCH','Mismatch'],['NEEDS_REVIEW','Review'],['FAILED','Failed']].map(([k, l]) => `<button data-act="fstatus" data-v="${k}" aria-pressed="${S.fStatus === k}">${l}</button>`).join('')}
+      </div>` : '';
+    const catSel = v === 'inbox' ? `<select class="select" id="catSel" aria-label="Filter by category" style="width:auto">
+        <option value="ALL">All categories</option>${Object.entries(CATS).map(([k, l]) => `<option value="${k}" ${S.fCat === k ? 'selected' : ''}>${l}</option>`).join('')}</select>` : '';
+    $('#view').innerHTML = `<div class="md${S.mobileDetail ? ' show-detail' : ''}" id="md">
+      <section class="list" aria-label="Emails">
+        <div class="listhead">
+          <div id="bannerBox">${bannerHTML()}</div>
+          <div class="row"><div class="searchbox">${icon('search')}<input class="input" id="q" type="search" placeholder="Search by id, subject or sender" value="${esc(S.q)}" aria-label="Search emails"></div>${catSel}</div>
+          ${statusChips}
+          <p class="sub" id="count"></p>
+        </div>
+        <div class="items" id="items"></div>
+      </section>
+      <section class="detail" id="detail" aria-live="polite"></section></div>`;
+  } else {
+    const bb = $('#bannerBox'); if(bb) bb.innerHTML = bannerHTML();
+  }
+  paintItems(); paintDetail();
+}
+
+function paintItems(){
+  const vis = visible();
+  if(!vis.some(e => e.id === S.sel)) { const nx = vis[Math.min(S.selIdx, vis.length - 1)]; S.sel = nx ? nx.id : null; S.edit = S.edit && S.edit.id === S.sel ? S.edit : null; }
+  const shown = vis.slice(0, S.limit);
+  $('#count').textContent = `${vis.length} ${vis.length === 1 ? 'email' : 'emails'}`;
+  $('#items').innerHTML = shown.length ? shown.map(e => `
+    <button class="item s-${e.status}" data-act="select" data-id="${esc(e.id)}" aria-selected="${e.id === S.sel}">
+      <div class="r1"><b>${esc(shortFrom(e.from))}</b><span>${esc(e.id)}</span></div>
+      <div class="subj">${esc(e.subject)}</div>
+      <div class="r3"><span class="chip">${esc(CATS[e.category] || e.category)}</span>${e.category === 'BL_COMPARISON' ? statusChip(e) : ''}${meter(e)}</div>
+    </button>`).join('') + (vis.length > shown.length ? `<div class="more"><button class="btn sm" data-act="more">Show ${Math.min(60, vis.length - shown.length)} more</button></div>` : '')
+    : `<div class="empty"><div><b>${S.view === 'review' ? 'The review queue is clear' : S.view === 'failures' ? 'No processing failures' : 'No emails match these filters'}</b>${S.view === 'inbox' ? 'Clear the search or choose another filter.' : 'Anything the system cannot decide on its own will appear here.'}</div></div>`;
+}
+
+async function paintDetail(){
+  const box = $('#detail'); if(!box) return;
+  const e = byId(S.sel);
+  if(!e){ box.innerHTML = `<div class="empty"><div><b>Select an email</b>Its comparison, message and evidence appear here.</div></div>`; return; }
+  if(S.live && !e._full){ await ensureFull(e); if(S.sel !== e.id) return; }
+  const tabs = [['compare','Comparison']];
+  tabs.push(['msg','Message'], ['evidence','Evidence and log']);
+  if(e.status === 'MISMATCH' || e.status === 'NEEDS_REVIEW') tabs.push(['reply', e.status === 'MISMATCH' ? 'Amendment notice' : 'Request to sender']);
+  if(!tabs.some(t => t[0] === S.tab)) S.tab = 'compare';
+  let body = '';
+  if(S.tab === 'compare') body = compareHTML(e);
+  else if(S.tab === 'msg') body = `<div class="card"><div class="card-b"><div class="msg">${esc(e.body) || 'This email has no body.'}</div></div></div>`;
+  else if(S.tab === 'evidence') body = evidenceHTML(e);
+  else body = replyHTML(e);
+  box.innerHTML = `<div class="dhead">
+      <button class="btn sm back" data-act="back">${icon('back')}Back to list</button>
+      <h2>${esc(e.subject)}</h2>
+      <div class="dmeta"><span>From ${esc(e.from)}</span><span>${esc(e.id)}</span>${e.date ? `<span>${esc(e.date)}</span>` : ''}${statusChip(e)}</div>
+      <div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button class="tab" role="tab" data-act="tab" data-tab="${k}" aria-selected="${S.tab === k}">${l}</button>`).join('')}</div>
+    </div><div class="dbody">${body}</div>`;
+}
+
+function evidenceHTML(e){
+  const st = {OK:['ok','Readable'], WRONG_DOC_TYPE:['warn','Wrong document type'], UNREADABLE:['bad','Unreadable']};
+  const atts = e.attachments.length ? e.attachments.map(a => {
+    const [c, l] = st[a.state] || ['', a.state];
+    return `<div class="card"><div class="card-b att"><div class="att-h">${icon('file')}<b>${esc(a.name)}</b><small>${esc(a.size)}</small><span class="chip ${c}" style="margin-left:auto">${esc(l)}</span></div>
+      ${a.text ? `<pre class="doc">${esc(a.text.slice(0, 1600))}</pre>` : `<p class="sub">No text was extracted from this file.</p>`}</div></div>`;
+  }).join('') : `<div class="note"><div><h4>No attachments</h4><p>This email arrived without any documents.</p></div></div>`;
+  const acts = e.activity.length ? `<ul class="log">${e.activity.map(a => `<li><time>${esc(a.t)}</time><span>${esc(a.text)}</span></li>`).join('')}</ul>` : `<p class="sub">No reviewer actions yet.</p>`;
+  return atts + `<div class="card"><div class="card-h">Activity</div><div class="card-b">${acts}</div></div>`;
+}
+
+async function ensureFull(e){
+  try{
+    const r = await jget('/api/email/' + encodeURIComponent(e.id));
+    const prev = {...e, _full:true}; const n = normalizeEmail(r, prev); n._full = true;
+    Object.assign(e, n);
+  }catch(err){ e._full = true; toast('Could not load the full record for ' + e.id + ': ' + err.message, true); }
+}
+
+/* =====================================================================
+   9. ACTIONS
+   ===================================================================== */
+function startEdit(id){
+  const e = byId(id); const d = {};
+  FIELDS.forEach(f => d[f.key] = {si: e.fields?.[f.key]?.si ?? '', bl: e.fields?.[f.key]?.bl ?? ''});
+  S.edit = {id, draft:d}; S.tab = 'compare'; rerender();
+}
+async function saveEdit(){
+  const {id, draft} = S.edit; const e = byId(id); if(!e) return;
+  const changed = FIELDS.filter(f => ['si','bl'].some(s => (e.fields?.[f.key]?.[s] ?? '') !== draft[f.key][s])).map(f => f.label);
+  e.fields = JSON.parse(JSON.stringify(draft));
+  e.backend = null; e.reason = null; e.reasonDetail = ''; e.error = null;
+  applyEval(e);
+  e.reviewed = {at: nowStr()};
+  if(id !== 'verify'){
+    log(e, `Operator ${changed.length ? 'updated ' + changed.join(', ') : 'confirmed the values'}. Result: ${STATUS_LABEL[e.status].toLowerCase()}.`);
+    if(S.live){
+      try{ await jpost('/api/human-review/' + encodeURIComponent(id), {overrides: draft}); }
+      catch(err){ toast('Saved in this browser only. The server rejected the review: ' + err.message, true); log(e, 'Server did not accept the review: ' + err.message); }
+    }
+  }
+  S.edit = null; S.tab = 'compare';
+  toast(`Re-verified: ${STATUS_LABEL[e.status].toLowerCase()}`);
+  rerender();
+}
+async function retry(id){
+  const e = byId(id); S.busy.add(id); rerender();
+  try{
+    let r;
+    if(S.live) r = await jget('/api/email/' + encodeURIComponent(id));
+    else{ await sleep(800); if(!e._retryRaw) throw new Error('The parser is still failing on this file.'); r = {...e._retryRaw, email_id:id, error:null}; }
+    const n = normalizeEmail(r, {...e, error:null, backend:null, fields:null, _full:true});
+    Object.assign(e, n, {error: r.error || null}); applyEval(e);
+    log(e, e.status === 'FAILED' ? 'Retry failed: ' + e.error : 'Retry succeeded. Result: ' + STATUS_LABEL[e.status].toLowerCase() + '.');
+    toast(e.status === 'FAILED' ? 'Retry failed' : 'Processed: ' + STATUS_LABEL[e.status].toLowerCase(), e.status === 'FAILED');
+  }catch(err){ e.error = err.message; e.status = 'FAILED'; log(e, 'Retry failed: ' + err.message); toast('Retry failed: ' + err.message, true); }
+  S.busy.delete(id); rerender();
+}
+function exportSubmission(){
+  if(S.live){ window.location.href = API + '/api/export/submission'; return; }
+  // Demo shape. Match it to sample_submission.json if you export from the client.
+  const out = {}; S.emails.forEach(e => out[e.id] = {category:e.category, mismatch_found:e.status === 'MISMATCH', mismatched_fields:e.mismatches});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], {type:'application/json'})); a.download = 'submission.json'; a.click();
+  toast('Exported sample data (demo mode)');
+}
+
+/* =====================================================================
+   10. NEW VERIFICATION VIEW
+   ===================================================================== */
+function entityFrom(id, subject, fields, backend){
+  return applyEval({id, from:'live verification', subject, body:'', date:nowStr(), category:'BL_COMPARISON', attachments:[], fields, backend:backend || null, error:null, activity:[], reviewed:null, sent:false, _full:true});
+}
+function paintVerify(){
+  const V = S.verify;
+  const scen = S.presets.map(p => `<button class="${p.tone}" data-act="preset" data-id="${esc(p.id)}" aria-pressed="${V.preset === p.id}"><b>${esc(p.title)}</b><span>${esc(p.desc)}</span></button>`).join('');
+  const drop = (side, title) => `<label class="drop ${V[side] ? 'has' : ''}" data-drop="${side}"><b>${title}</b><span>${V[side] ? esc(V[side].name) : 'Drop a file or click to browse (.pdf, .docx, .xlsx, .txt)'}</span>
+      <input type="file" data-file="${side}" accept=".pdf,.docx,.xlsx,.txt"></label>`;
+  const res = V.result ? `<div class="stack">${compareHTML(V.result)}${V.result.status === 'MISMATCH' || V.result.status === 'NEEDS_REVIEW' ? replyHTML(V.result) : ''}</div>`
+    : `<div class="card"><div class="empty" style="padding:70px 24px"><div><b>No check run yet</b>Pick a scenario or upload two documents. The seven-field comparison appears here.</div></div></div>`;
+  $('#view').innerHTML = `<div class="verify">
+    <div class="stack">
+      <div class="card"><div class="card-h">1. Try a scenario</div><div class="card-b scen">${scen}</div></div>
+      <div class="card"><div class="card-h">2. Or upload documents</div><div class="card-b stack">
+        ${drop('si','Shipping instruction')}${drop('bl','Draft bill of lading')}
+        <button class="btn primary" data-act="runFiles" ${V.running ? 'disabled' : ''}>${V.running ? 'Checking' : 'Verify documents'}</button>
+        <p class="sub">${S.live ? 'PDF, Word and Excel files are read by the server.' : 'Demo mode reads .txt files only. Connect the API for PDF, Word and Excel.'}</p></div></div>
+    </div>
+    <div>${res}</div></div>`;
+}
+function runPreset(id){
+  const p = S.presets.find(x => x.id === id); if(!p) return;
+  S.verify.preset = id; S.edit = null; S.drafts.verify = undefined;
+  S.verify.result = p.force ? entityFrom('verify', p.title, null, p.force) : entityFrom('verify', p.title, JSON.parse(JSON.stringify(Object.fromEntries(FIELDS.map(f => [f.key, {si:p.si[f.key] ?? '', bl:p.bl[f.key] ?? ''}])))));
+  paintVerify();
+}
+const readText = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = () => rej(new Error('Could not read ' + f.name)); r.readAsText(f); });
+async function runFiles(){
+  const V = S.verify;
+  if(!V.si || !V.bl){ toast('Add both the shipping instruction and the draft bill of lading first.', true); return; }
+  V.running = true; V.preset = null; S.edit = null; S.drafts.verify = undefined; paintVerify();
+  try{
+    const txt = f => /\.txt$/i.test(f.name);
+    if(txt(V.si) && txt(V.bl)){
+      const [a, b] = (await Promise.all([readText(V.si), readText(V.bl)])).map(parseText);
+      if(a.docType === 'other' || b.docType === 'other') V.result = entityFrom('verify', 'Uploaded documents', null, {status:'NEEDS_REVIEW', reason:'wrong_doc_type', detail:'One of the files is a packing list, invoice or certificate, not an SI or bill of lading.'});
+      else if(!a.count || !b.count) V.result = entityFrom('verify', 'Uploaded documents', null, {status:'NEEDS_REVIEW', reason:'unreadable', detail:'No shipment fields could be read from one of the files.'});
+      else V.result = entityFrom('verify', 'Uploaded documents', Object.fromEntries(FIELDS.map(f => [f.key, {si:a.fields[f.key] ?? '', bl:b.fields[f.key] ?? ''}])));
+    }else if(S.live){
+      const fd = new FormData(); fd.append('si', V.si); fd.append('bl', V.bl);
+      const r = await fetch(API + '/api/verify-files', {method:'POST', body:fd});
+      if(!r.ok) throw new Error(r.status + ' ' + r.statusText);
+      const n = normalizeEmail({...(await r.json()), email_id:'verify', subject:'Uploaded documents', category:'BL_COMPARISON'}); n._full = true; V.result = n;
+    }else throw new Error('Only .txt files can be checked in demo mode.');
+  }catch(err){ V.result = null; toast('Verification failed: ' + err.message, true); }
+  V.running = false; paintVerify();
+}
+
+/* =====================================================================
+   11. BENCHMARK VIEW
+   ===================================================================== */
+function paintBench(){
+  const m = S.metrics || {};
+  const g = (keys, fb) => { for(const k of keys){ const v = k.split('.').reduce((o, p) => o?.[p], m); if(v != null) return v; } return fb; };
+  const fmt = v => typeof v === 'number' ? (v <= 1 ? v.toFixed(4) : String(v)) : String(v);
+  const sample = !S.metrics;
+  const kpis = [
+    ['Final score', fmt(g(['final_score','final','score'], 1))],
+    ['Classification (macro F1)', fmt(g(['stage1.macro_f1','classification.macro_f1','classification','macro_f1'], 1))],
+    ['Comparison (recall and precision)', fmt(g(['stage3.f1','comparison.f1','comparison','stage3'], 1))],
+    ['Reliability cases caught', String(g(['reliability_caught','reliability.caught','reliability'], '20 / 20'))],
+    ['Defect emails caught end to end', String(g(['e2e_caught','e2e','headline'], '46 / 46'))],
+  ];
+  const count = (arr, fn) => { const o = {}; arr.forEach(x => { const k = fn(x); if(k) o[k] = (o[k] || 0) + 1; }); return o; };
+  const bars = (o, labels, total) => Object.entries(o).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<div class="bar"><span>${esc(labels[k] || k)}</span><div class="t"><i style="width:${Math.max(2, n / total * 100)}%"></i></div><em>${n}</em></div>`).join('') || '<p class="sub">No data.</p>';
+  const T = S.emails.length || 1;
+  const orgBanner = S.dataSource === 'organizer'
+    ? `<div class="dataset-banner active" style="margin-bottom:8px">
+        <span>Dataset active: <b>520 official organizer emails</b> evaluated by the SDOC autonomous pipeline with ground truth verification.</span>
+        <button class="btn sm" data-act="unloadOrganizer" style="padding:2px 8px;font-size:11.5px">Switch to Samples</button>
+      </div>`
+    : `<div class="dataset-banner" style="margin-bottom:8px">
+        <span>Currently viewing sample benchmark statistics. Click to load and verify all <b>520 official organizer emails</b>.</span>
+        <button class="btn sm primary" data-act="loadOrganizer" style="padding:2px 8px;font-size:11.5px"><svg class="i" style="width:12px;height:12px"><use href="#i-database"/></svg>Load Organizer 520</button>
+      </div>`;
+
+  $('#view').innerHTML = `<div class="bench">
+    <div><h2 class="h" style="font-size:18px">Benchmark results</h2>
+      <p class="sub">${sample ? 'Sample scores are shown because /api/metrics was not reachable. The breakdowns below come from the emails loaded now.' : 'Scores come from /api/metrics and the official scoring script.'}</p></div>
+    ${orgBanner}
+    <div class="kpis">${kpis.map(([l, v]) => `<div class="card kpi"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join('')}</div>
+    <div class="grid2">
+      <div class="card"><div class="card-h">Emails by category</div><div class="card-b bars">${bars(count(S.emails, e => e.category), CATS, T)}</div></div>
+      <div class="card"><div class="card-h">Document checks by result</div><div class="card-b bars">${bars(count(S.emails.filter(e => e.category === 'BL_COMPARISON'), e => e.status), STATUS_LABEL, Math.max(1, S.emails.filter(e => e.category === 'BL_COMPARISON').length))}</div></div>
+      <div class="card"><div class="card-h">Why cases went to review</div><div class="card-b bars">${bars(count(S.emails.filter(e => e.status === 'NEEDS_REVIEW'), e => e.reason), REASONS, Math.max(1, S.emails.filter(e => e.status === 'NEEDS_REVIEW').length))}</div></div>
+    </div>
+    <div class="actions"><button class="btn primary" data-act="export">${icon('download')}Export submission.json</button>
+      <button class="btn" data-act="nav" data-view="inbox">${icon('inbox')}Browse all emails</button></div></div>`;
+}
+
+/* =====================================================================
+   12. CHROME, ROUTING, EVENTS
+   ===================================================================== */
+function paintChrome(){
+  const cnt = {review:S.emails.filter(e => e.status === 'NEEDS_REVIEW').length, fail:S.emails.filter(e => e.status === 'FAILED').length};
+  const nav = (v, ic, label, n, cls) => `<button class="nav" data-act="nav" data-view="${v}" ${S.view === v ? 'aria-current="page"' : ''}>${icon(ic)}<span class="lbl">${label}</span>${n != null ? `<span class="count ${cls || ''}">${n}</span>` : ''}</button>`;
+  $('#railWork').innerHTML = nav('inbox','inbox','Inbox',S.emails.length) + nav('review','flag','Review queue',cnt.review,cnt.review ? 'warn' : '') + nav('failures','alert','Failures',cnt.fail,cnt.fail ? 'bad' : '');
+  
+  const orgActive = S.dataSource === 'organizer';
+  const railBox = $('#railOrganizerBox');
+  if(railBox){
+    railBox.innerHTML = `<button class="nav" data-act="toggleOrganizer" id="railOrganizer" style="${orgActive ? 'background:var(--rail-2);' : ''}">
+      ${icon('database')}
+      <span class="lbl">${orgActive ? 'Organizer data' : 'Load 520 emails'}</span>
+      <span class="count ${orgActive ? 'ok' : 'warn'}" style="${orgActive ? 'background:var(--ok);color:#fff' : ''}">${orgActive ? S.emails.length : '520'}</span>
+    </button>`;
+  }
+
+  $('#railInsights').innerHTML = nav('benchmark','chart','Benchmark');
+  $('#title').textContent = VIEW_TITLE[S.view];
+
+  const btnOrg = $('#btnOrganizer');
+  const btnOrgTxt = $('#btnOrganizerTxt');
+  if(btnOrg && btnOrgTxt){
+    if(S.loadingOrganizer){
+      btnOrgTxt.textContent = 'Loading 520...';
+      btnOrg.className = 'btn sm';
+    } else if(orgActive){
+      btnOrgTxt.textContent = 'Organizer Data (520)';
+      btnOrg.className = 'btn sm primary';
+      btnOrg.style.background = 'var(--ok)';
+      btnOrg.style.borderColor = 'var(--ok)';
+    } else {
+      btnOrgTxt.textContent = 'Load Organizer Data (520)';
+      btnOrg.className = 'btn sm';
+      btnOrg.style.background = '';
+      btnOrg.style.borderColor = '';
+    }
+  }
+
+  const p = $('#apiPill');
+  p.className = 'pill ' + (S.live ? 'live' : 'demo');
+  p.textContent = S.live ? (orgActive ? 'Connected (520 loaded)' : 'Connected to API') : 'Demo data';
+  p.title = S.live ? 'Reading from ' + (API || 'this server') : 'The API was not reachable, so sample emails are shown.';
+}
+function rerender(){
+  paintChrome();
+  if(['inbox','review','failures'].includes(S.view)) paintMD();
+  else if(S.view === 'verify') paintVerify();
+  else paintBench();
+}
+function go(view){
+  if(S.edit && S.edit.id !== 'verify') S.edit = null;
+  S.view = view; S.mobileDetail = false; S._mdView = null; S.limit = 60; S.selIdx = 0; S.sel = null; S.tab = 'compare';
+  rerender();
+}
+
+document.addEventListener('click', ev => {
+  const t = ev.target.closest('[data-act]'); if(!t) return;
+  const act = t.dataset.act, id = t.dataset.id;
+  switch(act){
+    case 'nav': go(t.dataset.view); break;
+    case 'select': {
+      if(S.edit && S.edit.id !== id) S.edit = null;
+      S.sel = id; S.selIdx = visible().findIndex(e => e.id === id); S.tab = 'compare'; S.mobileDetail = true;
+      $('#md')?.classList.add('show-detail'); paintItems(); paintDetail(); break; }
+    case 'back': S.mobileDetail = false; $('#md')?.classList.remove('show-detail'); break;
+    case 'tab': S.tab = t.dataset.tab; if(S.view === 'verify') paintVerify(); else paintDetail(); break;
+    case 'fstatus': S.fStatus = t.dataset.v; S.selIdx = 0; $('#statusSeg').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.fStatus)); paintItems(); paintDetail(); break;
+    case 'more': S.limit += 60; paintItems(); break;
+    case 'edit': startEdit(id); break;
+    case 'cancelEdit': S.edit = null; rerender(); break;
+    case 'saveEdit': saveEdit(); break;
+    case 'retry': retry(id); break;
+    case 'export': exportSubmission(); break;
+    case 'preset': runPreset(id); break;
+    case 'runFiles': runFiles(); break;
+    case 'loadOrganizer': loadOrganizerData(); break;
+    case 'unloadOrganizer': unloadOrganizerData(); break;
+    case 'toggleOrganizer': toggleOrganizer(); break;
+    case 'copy': navigator.clipboard?.writeText($('#draft').value).then(() => toast('Copied to clipboard'), () => toast('Copy failed. Select the text and copy it manually.', true)); break;
+    case 'send': { const e = byId(id); e.sent = true; if(id !== 'verify') log(e, 'Message logged as sent.'); toast('Message logged as sent. Connect your mail service to deliver it.'); rerender(); break; }
+  }
+});
+document.addEventListener('input', ev => {
+  const t = ev.target;
+  if(t.id === 'q'){ S.q = t.value; S.selIdx = 0; paintItems(); paintDetail(); }
+  else if(t.id === 'catSel'){ S.fCat = t.value; S.selIdx = 0; paintItems(); paintDetail(); }
+  else if(t.id === 'draft'){ S.drafts[t.dataset.id] = t.value; }
+  else if(t.dataset.k && S.edit){ S.edit.draft[t.dataset.k][t.dataset.side] = t.value; }
+  else if(t.dataset.file){ S.verify[t.dataset.file] = t.files[0] || null; paintVerify(); }
+});
+document.addEventListener('change', ev => { if(ev.target.id === 'catSel'){ S.fCat = ev.target.value; S.selIdx = 0; paintItems(); paintDetail(); } });
+['dragover','dragleave','drop'].forEach(n => document.addEventListener(n, ev => {
+  const z = ev.target.closest?.('[data-drop]'); if(!z) return;
+  ev.preventDefault(); z.classList.toggle('over', n === 'dragover');
+  if(n === 'drop' && ev.dataTransfer.files[0]){ S.verify[z.dataset.drop] = ev.dataTransfer.files[0]; paintVerify(); }
+}));
+document.addEventListener('keydown', ev => {
+  const tag = ev.target.tagName;
+  if(ev.key === '/' && !['INPUT','TEXTAREA','SELECT'].includes(tag) && $('#q')){ ev.preventDefault(); $('#q').focus(); return; }
+  if(['INPUT','TEXTAREA','SELECT'].includes(tag) || !$('#items')) return;
+  if(ev.key === 'j' || ev.key === 'k'){
+    const vis = visible(); const i = vis.findIndex(e => e.id === S.sel); const n = vis[i + (ev.key === 'j' ? 1 : -1)];
+    if(n){ S.sel = n.id; S.selIdx = i + (ev.key === 'j' ? 1 : -1); S.tab = 'compare'; S.edit = null; paintItems(); paintDetail(); $('#items [aria-selected=true]')?.scrollIntoView({block:'nearest'}); }
+  }
+});
+
+async function init(){
+  S.demoEmails = DEMO.map(r => normalizeEmail(r));
+  S.emails = S.demoEmails;
+  
+  if(!FORCE_DEMO){
+    try{
+      const health = await jget('/api/health').catch(() => null);
+      if(health && health.status === 'ok') S.live = true;
+      jget('/api/presets').then(p => { const n = normalizePresets(p); if(n){ S.presets = n; if(S.view === 'verify') paintVerify(); } }).catch(() => {});
+      jget('/api/metrics').then(m => { S.metrics = m; if(S.view === 'benchmark') paintBench(); }).catch(() => {});
+    }catch(err){
+      jget('/api/emails').then(() => { S.live = true; paintChrome(); }).catch(() => { S.live = false; });
+    }
+  }
+  if(!S.presets.length) S.presets = PRESETS;
+  rerender();
+}
+init();
+</script>
+</body>
+</html>
